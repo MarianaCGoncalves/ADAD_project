@@ -8,5 +8,5 @@ conn = await client.connect();
 console.error(e);
 }
 // Database name
-let db = conn.db("ADAD_bd");
+let db = conn.db("Projeto");
 export default db;
