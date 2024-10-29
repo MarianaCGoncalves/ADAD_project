@@ -10,4 +10,13 @@ let results = await db.collection('movies').find({})
 .toArray();
 res.send(results).status(200);
 });
+
+router.get("/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    let results = await db.collection('movies').find({_id: id})
+    .limit(50)
+    .toArray();
+    res.send(results).status(200);
+    });
+
 export default router;
