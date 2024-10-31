@@ -25,4 +25,13 @@ router.get("/:id", async (req, res) => {
         res.status(200).send(results); }
     });
 
+
+    router.delete('/:id', async (req, res) => {
+        const id = parseInt(req.params.id);
+        let results = await db.collection('users').deleteOne({_id: id});
+        if (!results || results.length === 0) { 
+          res.status(404).send("User not found");
+       } else { 
+          res.status(200).send(results); }
+      });
 export default router;

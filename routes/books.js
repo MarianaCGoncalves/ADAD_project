@@ -53,9 +53,18 @@ router.get('/', (req, res) => {
       res.status(200).send(results); }
   });
 
-  router.get('/:id', async (req, res) => {
+  router.delete('/:id', async (req, res) => {
     const id = parseInt(req.params.id);
-    let results = await db.collection('books').find({_id: id})
+    let results = await db.collection('books').deleteOne({_id: id});
+    if (!results || results.length === 0) { 
+      res.status(404).send("Book not found");
+   } else { 
+      res.status(200).send(results); }
+  });
+
+
+   
+      
 
 export default router;
 
