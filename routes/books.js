@@ -3,6 +3,7 @@ import db from "../db/config.js";
 const router = express.Router();
 
 // Endpoint para listar livros com paginação
+// ALTERAR: db.collection.find().skip(10).limit(10);
 router.get('/', (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
