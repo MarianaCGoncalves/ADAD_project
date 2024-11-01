@@ -23,28 +23,38 @@ router.get('/', (req, res) => {
 
   router.get('/:id', async (req, res) => {
     const id = parseInt(req.params.id);
-    let results = await db.collection('books').aggregate([
-      {$match: {_id: id}} , 
-      {$lookup: {from: "users",
-                let:{_id: id},
-                pipeline: [
-                  {$unwind: "$reviews"},
-                  {$match: {book_id: id} },
-                  {$group: {_id: "$reviews.book_id"},
-                  average_score: {$avg: "$reviews.score"}}
-                ],
-                as: "average_score"
-                }
-      },
-      {$lookup: {from: "comments",
-                 localField: "_id",
-                 foreignField: "book_id",
-                 as: "book_comments"
+    let results = await db.collection('users').aggregate([
+      {$unwind: "$reviews"},
+      {$match: {"reviews.book_id": id}},
+  
+      {$lookup: {
+          from:"books",
+          localField:"reviews.book_id",
+          foreignField:"_id",
+          as:"book_info"
       }},
-      {$addFields: {
-        average_score: "$average_score",
-        book_comments: "$book_comments"
-      }}
+  
+      {$unwind:"$book_info"},
+  
+      {$lookup:{
+          from:"comments",
+          localField:"reviews.book_id",
+          foreignField:"book_id",
+          as:"book_comments"
+      }},
+  
+      {$unwind:"$book_comments"},
+  
+      {$group:
+          {
+          _id: id,
+          avg_score: {$avg:"$reviews.score"},
+          info: {$first:"$book_info"},
+          comms: {$push:"$book_comments.comment"}
+          }
+  
+      }
+  
     ]).toArray();
 
     if (!results || results.length === 0) { 
