@@ -16,6 +16,7 @@ app.use("/comments", comments);
 app.use("/livrarias", livrarias);
 
 // Remove 'require' and directly use the already imported 'books' route
+//app.use('/api', books);
 
 app.listen(port, () => {
   console.log(`Backend listening on port ${port}`);

@@ -20,7 +20,50 @@ router.get('/', (req, res) => {
       books: paginatedBooks
     });
   });
+// 15-(Alex) Endpoint para listar livros com comentários, ordenados pelo número de comentários
+router.get('/comments', async (req, res) => {
+    try {
+        // Realiza a agregação para contar e ordenar os livros com comentários
+        let results = await db.collection('books').aggregate([
+            {
+                $lookup: {
+                    from: "comments",             // Associa com a coleção de comentários
+                    localField: "_id",            // Campo em livros (assumindo que é o campo `_id`)
+                    foreignField: "book_id",      // Campo em comentários que associa com livros
+                    as: "book_comments"           // Nome do campo onde os comentários serão armazenados
+                }
+            },
+            {
+                $match: { "book_comments.0": { $exists: true } } // Inclui apenas livros que têm pelo menos um comentário
+            },
+            {
+                $addFields: {
+                    totalComments: { $size: "$book_comments" } // Adiciona um campo `totalComments` com a contagem de comentários
+                }
+            },
+            {
+                $sort: { totalComments: -1 } // Ordena pelo número de comentários em ordem decrescente
+            },
+            {
+                $project: {
+                    title: 1,
+                    totalComments: 1,
+                    book_comments: 1 // Inclui os comentários no resultado
+                }
+            }
+        ]).toArray();
 
+        // Verifica se há resultados
+        if (results.length === 0) {
+            return res.status(404).send("Nenhum livro com comentários encontrado.");
+        }
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error("Erro ao buscar livros com comentários:", error);
+        res.status(500).send("Erro no servidor.");
+    }
+});
   router.get('/:id', async (req, res) => {
     const id = parseInt(req.params.id);
     let results = await db.collection('users').aggregate([
@@ -101,49 +144,9 @@ router.get('/year/:year', async (req, res) => { // Alterado para `/year/:year`
   }
 });
       
-//15-(Alex) Endpoint para listar livros com comentários, ordenados pelo número de comentários
-router.get('/comments', async (req, res) => {
-  try {
-      // Realiza uma agregação para contar comentários e ordenar
-      let results = await db.collection('books').aggregate([
-          {
-              $lookup: {
-                  from: "comments",
-                  localField: "_id", // Usa `_id` diretamente como número em `books`
-                  foreignField: "book_id", // Assume `book_id` como número em `comments`
-                  as: "book_comments"
-              }
-          },
-          {
-              $match: { "book_comments.0": { $exists: true } } // Filtra livros que têm pelo menos um comentário
-          },
-          {
-              $addFields: {
-                  totalComments: { $size: "$book_comments" } // Conta o número de comentários
-              }
-          },
-          {
-              $sort: { totalComments: -1 } // Ordena pelo número total de comentários em ordem decrescente
-          },
-          {
-              $project: {
-                  title: 1,
-                  totalComments: 1,
-                  book_comments: 1 // Inclui os comentários, caso queiras ver os detalhes
-              }
-          }
-      ]).toArray();
 
-      if (results.length === 0) {
-          return res.status(404).send("Nenhum livro com comentários encontrado.");
-      }
 
-      res.status(200).json(results);
-  } catch (error) {
-      console.error("Erro ao buscar livros com comentários:", error);
-      res.status(500).send("Erro no servidor.");
-  }
-});
+
 
 
 export default router;
