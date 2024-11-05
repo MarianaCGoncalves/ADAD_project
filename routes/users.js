@@ -11,15 +11,28 @@ router.get("/", async (req, res) => {
 });
 
 
+
 //endpoint 6
 router.get("/:id", async (req, res) => {
     try{
     const id = parseInt(req.params.id);
     let results = await db.collection('users').aggregate([
         {$match: {_id: id}},
-        {$sort: {score: -1}},
-        {$limit: 3}
+
        
+        {$unwind: "$reviews"},
+        
+        {$sort: {"reviews.score": -1}},
+        {$limit: 3},
+        {$group: {
+            _id: "$_id",
+            first_name: {$first: "$first_name"},
+            last_name: {$first: "$last_name"},
+            year_of_birth: {$first: "$year_of_birth"},
+            job: {$first: "$job"},
+            reviews: {$push: "$reviews"}
+        }}
+        
      ])
     .toArray();
     if (!results || results.length == 0) { 
