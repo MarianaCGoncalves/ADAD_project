@@ -10,29 +10,44 @@ router.get("/", async (req, res) => {
     res.send(results).status(200);
 });
 
+
+//endpoint 6
 router.get("/:id", async (req, res) => {
+    try{
     const id = parseInt(req.params.id);
     let results = await db.collection('users').aggregate([
         {$match: {_id: id}},
-        {$unwind: "$reviews"},
-         {$sort: {score: -1}},
+        {$sort: {score: -1}},
         {$limit: 3}
+       
      ])
     .toArray();
-    if (!results || results.length === 0) { 
+    if (!results || results.length == 0) { 
         res.status(404).send("User not found");
      } else { 
         res.status(200).send(results); }
-    });
+
+     }catch (error) {
+        res.send({'error':'Internal error'}).status(500);
+     }
+    }); 
 
 
+    //endpoint 8
     router.delete('/:id', async (req, res) => {
+    try {
         const id = parseInt(req.params.id);
+
         let results = await db.collection('users').deleteOne({_id: id});
-        if (!results || results.length === 0) { 
+
+        if (!results || results.length == 0) { 
           res.status(404).send("User not found");
        } else { 
           res.status(200).send(results); }
+
+       }catch (error){
+        res.send({'error':'Internal error'}).status(500);
+       }
       });
       
 export default router;
