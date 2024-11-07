@@ -16,8 +16,9 @@ app.use("/comments", comments);
 app.use("/livrarias", livrarias);
 
 // Remove 'require' and directly use the already imported 'books' route
-app.use('/api', books);
-
+//app.use('/api', books);
+console.log("Rota livrarias carregada");  // Adiciona esta linha para verificar se a rota é carregada
 app.listen(port, () => {
   console.log(`Backend listening on port ${port}`);
 });
+
