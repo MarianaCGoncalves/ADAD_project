@@ -64,8 +64,12 @@ router.get('/comments', async (req, res) => {
         res.status(500).send("Erro no servidor.");
     }
 });
+
+  //endpoint 5
   router.get('/:id', async (req, res) => {
     const id = parseInt(req.params.id);
+
+    try {
     let results = await db.collection('users').aggregate([
       {$unwind: "$reviews"},
       {$match: {"reviews.book_id": id}},
@@ -77,7 +81,7 @@ router.get('/comments', async (req, res) => {
           as:"book_info"
       }},
   
-      {$unwind:"$book_info"},
+      //{$unwind:"$book_info"},
   
       {$lookup:{
           from:"comments",
@@ -86,33 +90,47 @@ router.get('/comments', async (req, res) => {
           as:"book_comments"
       }},
   
-      {$unwind:"$book_comments"},
+      //{$unwind:"$book_comments"},
   
       {$group:
           {
           _id: id,
           avg_score: {$avg:"$reviews.score"},
           info: {$first:"$book_info"},
-          comms: {$push:"$book_comments.comment"}
+          comms: {$first:"$book_comments.comment"}
           }
   
       }
   
     ]).toArray();
 
-    if (!results || results.length === 0) { 
+    if (!results || results.length == 0) {  //ver se id existe
       res.status(404).send("Book not found");
    } else { 
-      res.status(200).send(results); }
+      res.status(200).send(results); 
+    
+   }
+
+  } catch (error){
+    
+      res.send({'error':'Internal error'}).status(500);
+   
+  }
   });
 
+
+  //endpoint 7
   router.delete('/:id', async (req, res) => {
+    try {
     const id = parseInt(req.params.id);
     let results = await db.collection('books').deleteOne({_id: id});
-    if (!results || results.length === 0) { 
+    if (!results || results.length == 0) { 
       res.status(404).send("Book not found");
    } else { 
       res.status(200).send(results); }
+   }catch (error) {
+    res.send({'error':'Internal error'}).status(500);
+   }
   });
 
 
