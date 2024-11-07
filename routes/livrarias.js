@@ -5,6 +5,7 @@ const router = express.Router();
 /*router.get('/test', (req, res) => {
     res.send('Rota de teste funcionando!');
 });*/
+/*
 //1 Endpoint para adicionar um livro específico a uma livraria
 router.post('/:livrariaId/addBook/:bookId', async (req, res) => {
     try {
@@ -200,6 +201,5 @@ router.get('/countNearby', async (req, res) => {
     }
 });
 
-
-//falta o ponto 6
+*/
 export default router;
