@@ -106,10 +106,8 @@ router.get('/comments', async (req, res) => {
 
     if (!results || results.length == 0) {  //ver se id existe
       res.status(404).send("Book not found");
-   } else { 
+   } 
       res.status(200).send(results); 
-    
-   }
 
   } catch (error){
     
@@ -126,8 +124,48 @@ router.get('/comments', async (req, res) => {
     let results = await db.collection('books').deleteOne({_id: id});
     if (!results || results.length == 0) { 
       res.status(404).send("Book not found");
-   } else { 
-      res.status(200).send(results); }
+    }
+      res.status(200).send(results); 
+
+   }catch (error) {
+    res.send({'error':'Internal error'}).status(500);
+   }
+  });
+
+
+  //endpoint 9
+  router.put('/:id', async (req, res) => {
+    try {
+    const id = parseInt(req.params.id);
+    const {title,
+        isbn,
+        pageCount,
+        publishedDate,
+        thumbnailUrl,
+        shortDescription,
+        longDescription,
+        status,
+        authors,
+        categories } = req.body; //o rec.body contem os dados do corpo pedido no http
+
+    let results = await db.collection('books').updateOne(
+        {_id: id},
+        {$set: {title,
+                isbn,
+                pageCount,
+                publishedDate,
+                thumbnailUrl,
+                shortDescription,
+                longDescription,
+                status,
+                authors,
+                categories     
+         }}
+    );
+    if (!results || results.length == 0) { 
+      res.status(404).send("Book not found");
+   }  
+      res.status(200).send(results); 
    }catch (error) {
     res.send({'error':'Internal error'}).status(500);
    }

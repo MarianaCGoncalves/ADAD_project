@@ -37,8 +37,8 @@ router.get("/:id", async (req, res) => {
     .toArray();
     if (!results || results.length == 0) { 
         res.status(404).send("User not found");
-     } else { 
-        res.status(200).send(results); }
+     } 
+        res.status(200).send(results); 
 
      }catch (error) {
         res.send({'error':'Internal error'}).status(500);
@@ -55,12 +55,41 @@ router.get("/:id", async (req, res) => {
 
         if (!results || results.length == 0) { 
           res.status(404).send("User not found");
-       } else { 
-          res.status(200).send(results); }
+       }  
+          res.status(200).send(results); 
 
        }catch (error){
         res.send({'error':'Internal error'}).status(500);
        }
       });
+
+
+      //endpoint 10
+      router.put('/:id', async (req, res) => {
+         try {
+         const id = parseInt(req.params.id);
+         const {first_name,
+             last_name,
+             year_of_birth,
+             job,
+             reviews } = req.body; //o rec.body contem os dados do corpo pedido no http
+     
+         let results = await db.collection('users').updateOne(
+             {_id: id},
+             {$set: {first_name,
+               last_name,
+               year_of_birth,
+               job,
+               reviews    
+              }}
+         );
+         if (!results || results.length == 0) { 
+           res.status(404).send("Book not found");
+        }  
+           res.status(200).send(results); 
+        }catch (error) {
+         res.send({'error':'Internal error'}).status(500);
+        }
+       });
       
 export default router;
