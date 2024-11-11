@@ -228,10 +228,9 @@ router.get('/job/:job',async (req,res)=> {
   //console.log(job);
   try{
     let results = await db.collection('users').aggregate([
-
       {$unwind: "$reviews"},
       {$match: {job: job}},
-      {$count: {job}}
+      {$count: job}
 
     ]).toArray();
 
@@ -245,20 +244,44 @@ router.get('/job/:job',async (req,res)=> {
   }catch(error){
     return res.status(500).send("Server Error");
   }
-})
-
-router.get('/category/:category/price/:price', async(req, res)=> {
+});
+//endpoint 17
+router.get('/category/:category/price/:price/author/:author', async(req, res)=> {
   const category = req.params.category;
   const price = parseInt(req.params.price);
+  const author = req.params.author;
 
   try{
-    let results = await db.collection('books').aggregate(
-      {$unwind: "category"}
-    )
-
+    let results = await db.collection('books').aggregate([
+      {$unwind: "$categories"}, {$unwind: "$authors"},
+      {$match: {
+          $and:[
+              {categories: category},
+              {authors: {$regex: author}},
+              {price: {$lte: price}}
+              ]}
+      },
+      {$group:  { 
+          _id: "$_id", 
+          title: { $first: "$title" },
+          isbn:{$first: "$isbn"},
+          pageCount:{$first: "$pageCount"},
+          thumbnailUrl:{$first: "$thumbnailUrl"},
+          longDescription:{$first: "longDescription"},
+          status:{$first:"$status"},
+          categories: { $first: "$categories" },
+          authors: { $first: "$authors" },
+          price: { $first: "$price" }}
+      }
+  ]).toArray();
+    if(!results){
+      res.status(404).send("Couldn't find the book");
+    }else{
+      res.status(200).send(results);
+    }
   }catch(error){
-
+      return res.status(500).send("Server Error");
   }
-})
+});
 export default router;
 
