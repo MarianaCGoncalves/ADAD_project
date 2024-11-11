@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb";
 const router = express.Router();
 
 //EXEMPLO DE PAGINAÇÃO
+//endpoint 2 
 router.get("/page/:page", async (req, res) => { 
     let page = parseInt(req.params.page) * 10;
     let results = await db.collection('users').find({})
