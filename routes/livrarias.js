@@ -62,39 +62,33 @@ router.get('/:id', async (req, res) => {
     }
   });
 
-/*
+
 //2 Endpoint para consultar livros numa livraria específica
-router.get('/:livrariaId/books', async (req, res) => {
+router.get('/livrarias/:livrariaId', async (req, res) => {
+    const livrariaId = parseInt(req.params.livrariaId); // Converte o ID da livraria para um número
+
     try {
-        const { livrariaId } = req.params;
+        // Busca a livraria e projeta apenas o array `books`
+        const livraria = await db.collection('livrarias').findOne(
+            { _id: livrariaId },
+            { projection: { books: 1, _id: 0 } } // Projeta apenas `books` e omite `_id`
+        );
 
-
-        if (!ObjectId.isValid(livrariaId)) {
-            return res.status(400).json({ error: "ID da livraria inválido" });
+        // Se a livraria ou o array `books` não existir, responde com uma mensagem padrão
+        if (!livraria || !livraria.books) {
+            return res.status(404).send("Nenhum livro encontrado na livraria.");
         }
 
-        const livraria = await db.collection("livrarias").findOne({ _id: new ObjectId(livrariaId) });
-        if (!livraria) {
-            return res.status(404).json({ error: "Livraria não encontrada" });
-        }
-
-       
-        if (!livraria.books || livraria.books.length === 0) {
-            return res.status(404).json({ message: "Nenhum livro encontrado nesta livraria." });
-        }
-
-       
-        const livros = await db.collection("books").find({ _id: { $in: livraria.books.map(id => new ObjectId(id)) } }).toArray();
-
-        res.status(200).json({ livraria: livraria.INF_NOME, livros });
+        // Retorna apenas o array `books`
+        res.status(200).json(livraria.books);
     } catch (error) {
         console.error("Erro ao buscar livros na livraria:", error);
-        res.status(500).json({ error: "Erro no servidor." });
+        res.status(500).send("Erro no servidor.");
     }
 });
 
 
-
+/*
 //3 Endpoint para listar livrarias perto de uma localização
 router.get('/nearby', async (req, res) => {
     try {
