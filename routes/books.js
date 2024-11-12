@@ -283,5 +283,46 @@ router.get('/category/:category/price/:price/author/:author', async(req, res)=> 
       return res.status(500).send("Server Error");
   }
 });
+//endpoint 11
+router.get('/top/:limit', async(req, res)=> {
+  const limit = parseInt(req.params.limit);
+  try{
+    console.log(limit);
+    let results = await db.collection('users').aggregate([ 
+
+      {$unwind: "$reviews"},
+      
+      {$lookup: {
+          from:"books",
+          localField:"reviews.book_id",
+          foreignField:"_id",
+          as:"book_info"
+      }},
+      {$group: {
+        _id: "$reviews.book_id",
+        avg_score: {$avg: "$reviews.score"},
+        info: {$first: "$book_info"}
+    }},
+      //{$unwind: "$book_info"},
+      
+      
+      
+      {$sort: {"avg_score":-1}},
+      {$limit: limit}
+    ]).toArray();
+
+    //console.log(results);
+
+    if(!results){
+      return res.status(400).send("Couldn't find that job");
+    }else{
+      return res.status(200).send(results);
+    }
+}catch(error){
+  return res.status(500).send("Server Error");
+}
+});
+
+
 export default router;
 
