@@ -2,6 +2,7 @@ import express from "express";
 import db from "../db/config.js";
 const router = express.Router();
 
+
 router.get('/test', async (req, res) => {
     try {
         const livrarias = await db.collection('livrarias').find().limit(1).toArray();
@@ -64,42 +65,29 @@ router.get('/:id', async (req, res) => {
   });
 
 
-/*
 //3 Endpoint para listar livrarias perto de uma localização
-router.get('/nearby', async (req, res) => {
+router.get('/nearLocation', async (req, res) => {
     try {
-        const { latitude, longitude, distance } = req.query;
+        const { latitude, longitude, distancia } = req.query;
+
+        const latitude2 = parseFloat(latitude);
+        const longitude2 = parseFloat(longitude);
+        const distancia2 = parseFloat(distancia);
+
+        await db.collection("livrarias").createIndex({ location: "2dsphere"});
 
         let results = await db.collection("livrarias").find(
             {
-                location: {
+                "geometry.coordinates": {
                     $geoWithin: {
-                        $center: [[latitude, longitude], distance]
+                        $centerSphere: [[longitude2, latitude2], distancia2 / 3963.2] //para obter a disrancia em radianos é preciso dividir pelo nº de milhas da Terra
                     }
                 }
             }
         ).toArray();
-       
 
-        // Verifica se os parâmetros são válidos
-        if (!latitude || !longitude || !distance) {
-            return res.status(400).json({ error: "Latitude, longitude e distância são obrigatórios." });
-        }
-
-        const latitudeNum = parseFloat(latitude);
-        const longitudeNum = parseFloat(longitude);
-        const distanceNum = parseFloat(distance);
-
-        if (isNaN(latitudeNum) || isNaN(longitudeNum) || isNaN(distanceNum)) {
-            return res.status(400).json({ error: "Latitude, longitude e distância devem ser números válidos." });
-        }
-
-        // Converte a distância de metros para radianos (1 radiano = ~6378.1 km)
-        const distanceInRadians = distanceNum / 6378100;
-
-
-        if(!results){
-            return res.status(400).send("Nenhuma livraria próxima");
+        if(results.length == 0){
+            return res.status(404).send("Nenhuma livraria próxima");
           }else{
             return res.status(200).send(results);
           }
