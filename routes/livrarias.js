@@ -2,6 +2,7 @@ import express from "express";
 import db from "../db/config.js";
 const router = express.Router();
 
+
 router.get('/test', async (req, res) => {
     try {
         const livrarias = await db.collection('livrarias').find().limit(1).toArray();
@@ -43,8 +44,9 @@ router.post('/:id', async (req, res) => {
 
 
 
-// 2. Consultar livros numa livraria específica
+// #2 Endpoint para consultar livros numa livraria específica
 router.get('/:id', async (req, res) => {
+
 
     try {
       const livraria = await db.collection("livrarias").findOne(
@@ -63,74 +65,74 @@ router.get('/:id', async (req, res) => {
   });
 
 
-//2 Endpoint para consultar livros numa livraria específica
-router.get('/livrarias/:livrariaId', async (req, res) => {
-    const livrariaId = parseInt(req.params.livrariaId); // Converte o ID da livraria para um número
-
+// #3 Endpoint para listar livrarias perto de uma localização
+router.get('/nearLocation', async (req, res) => {
     try {
-        // Busca a livraria e projeta apenas o array `books`
-        const livraria = await db.collection('livrarias').findOne(
-            { _id: livrariaId },
-            { projection: { books: 1, _id: 0 } } // Projeta apenas `books` e omite `_id`
-        );
+        const { latitude, longitude, distancia } = req.query;
 
-        // Se a livraria ou o array `books` não existir, responde com uma mensagem padrão
-        if (!livraria || !livraria.books) {
-            return res.status(404).send("Nenhum livro encontrado na livraria.");
-        }
+        const latitude2 = parseFloat(latitude);
+        const longitude2 = parseFloat(longitude);
+        const distancia2 = parseFloat(distancia);
 
-        // Retorna apenas o array `books`
-        res.status(200).json(livraria.books);
-    } catch (error) {
-        console.error("Erro ao buscar livros na livraria:", error);
-        res.status(500).send("Erro no servidor.");
-    }
-});
+        await db.collection("livrarias").createIndex({ location: "2dsphere"});
 
-
-/*
-//3 Endpoint para listar livrarias perto de uma localização
-router.get('/nearby', async (req, res) => {
-    try {
-        const { latitude, longitude, distance } = req.query;
-
-        // Verifica se os parâmetros são válidos
-        if (!latitude || !longitude || !distance) {
-            return res.status(400).json({ error: "Latitude, longitude e distância são obrigatórios." });
-        }
-
-        const latitudeNum = parseFloat(latitude);
-        const longitudeNum = parseFloat(longitude);
-        const distanceNum = parseFloat(distance);
-
-        if (isNaN(latitudeNum) || isNaN(longitudeNum) || isNaN(distanceNum)) {
-            return res.status(400).json({ error: "Latitude, longitude e distância devem ser números válidos." });
-        }
-
-        // Converte a distância de metros para radianos (1 radiano = ~6378.1 km)
-        const distanceInRadians = distanceNum / 6378100;
-
-        // Pesquisa de livrarias perto da localização especificada
-        const livrariasProximas = await db.collection("livrarias").find({
-            location: {
-                $geoWithin: {
-                    $centerSphere: [[longitudeNum, latitudeNum], distanceInRadians]
+        let results = await db.collection("livrarias").find(
+            {
+                "geometry.coordinates": {
+                    $geoWithin: {
+                        $centerSphere: [[longitude2, latitude2], distancia2 / 3963.2] //para obter a disrancia em radianos é preciso dividir pelo nº de milhas da Terra
+                    }
                 }
             }
-        }).toArray();
+        ).toArray();
 
-        // Verifica se há resultados
-        if (livrariasProximas.length === 0) {
-            return res.status(404).json({ message: "Nenhuma livraria encontrada nas proximidades." });
-        }
-
-        res.status(200).json(livrariasProximas);
+        if(results.length == 0){
+            return res.status(404).send("Nenhuma livraria próxima");
+          }else{
+            return res.status(200).send(results);
+          }
     } catch (error) {
-        console.error("Erro ao buscar livrarias próximas:", error);
-        res.status(500).json({ error: "Erro no servidor." });
+        return res.status(500).send("Server Error");
     }
 });
 
+
+
+// #5 Retornar número de livrarias perto de uma localização
+router.get('/quantasPerto', async (req, res) => {
+    try {
+        const { latitude, longitude, distancia } = req.query;
+
+        const latitude2 = parseFloat(latitude);
+        const longitude2 = parseFloat(longitude);
+        const distancia2 = parseFloat(distancia);
+
+        await db.collection("livrarias").createIndex({ location: "2dsphere"});
+
+        let results = await db.collection("livrarias").countDocuments(
+            {
+                "geometry.coordinates": {
+                    $geoWithin: {
+                        $centerSphere: [[longitude2, latitude2], distancia2 / 3963.2] //para obter a disrancia em radianos é preciso dividir pelo nº de milhas da Terra
+                    }
+                }
+            }
+        );
+       
+        console.log(results);
+
+        if(results === 0){
+            return res.status(400).send("Não existem livrarias perto");
+          }else{
+            return res.status(200).json({ quantidade: results });
+          }
+    } catch (error) {
+        return res.status(500).send("Server Error");
+    }
+});
+ 
+
+/*
 //4 Endpoint para listar livrarias perto de uma rota
 router.post('/route', async (req, res) => {
     try {
@@ -174,43 +176,6 @@ router.post('/route', async (req, res) => {
         res.status(200).json(livrariasProximas);
     } catch (error) {
         console.error("Erro ao buscar livrarias próximas da rota:", error);
-        res.status(500).json({ error: "Erro no servidor." });
-    }
-});
-
-//5 Endpoint para contar livrarias perto de uma localização
-router.get('/countNearby', async (req, res) => {
-    try {
-        const { latitude, longitude, distance } = req.query;
-
-        // Verifica se os parâmetros são válidos
-        if (!latitude || !longitude || !distance) {
-            return res.status(400).json({ error: "Latitude, longitude e distância são obrigatórios." });
-        }
-
-        const latitudeNum = parseFloat(latitude);
-        const longitudeNum = parseFloat(longitude);
-        const distanceNum = parseFloat(distance);
-
-        if (isNaN(latitudeNum) || isNaN(longitudeNum) || isNaN(distanceNum)) {
-            return res.status(400).json({ error: "Latitude, longitude e distância devem ser números válidos." });
-        }
-
-        // Converte a distância de metros para radianos
-        const distanceInRadians = distanceNum / 6378100;
-
-        // Conta as livrarias dentro do raio especificado
-        const count = await db.collection("livrarias").countDocuments({
-            location: {
-                $geoWithin: {
-                    $centerSphere: [[longitudeNum, latitudeNum], distanceInRadians]
-                }
-            }
-        });
-
-        res.status(200).json({ count });
-    } catch (error) {
-        console.error("Erro ao contar livrarias próximas:", error);
         res.status(500).json({ error: "Erro no servidor." });
     }
 });

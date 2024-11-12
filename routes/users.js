@@ -37,14 +37,15 @@ router.get("/:id", async (req, res) => {
         
      ])
     .toArray();
-    if (!results || results.length == 0) { 
-        res.status(404).send("User not found");
-     } 
-        res.status(200).send(results); 
+    if(!results){
+      return res.status(400).send("Couldn't find that user");
+    }else{
+      return res.status(200).send(results);
+    }
 
-     }catch (error) {
-        res.send({'error':'Internal error'}).status(500);
-     }
+   }catch (error) {
+    return res.status(500).send("Server Error");
+   }
     }); 
 
 
@@ -55,14 +56,15 @@ router.get("/:id", async (req, res) => {
 
         let results = await db.collection('users').deleteOne({_id: id});
 
-        if (!results || results.length == 0) { 
-          res.status(404).send("User not found");
-       }  
-          res.status(200).send(results); 
-
-       }catch (error){
-        res.send({'error':'Internal error'}).status(500);
+        if(!results){
+         return res.status(400).send("Couldn't find that user");
+       }else{
+         return res.status(200).send(results);
        }
+   
+      }catch (error) {
+       return res.status(500).send("Server Error");
+      }
       });
 
 
@@ -85,13 +87,15 @@ router.get("/:id", async (req, res) => {
                reviews    
               }}
          );
-         if (!results || results.length == 0) { 
-           res.status(404).send("Book not found");
-        }  
-           res.status(200).send(results); 
-        }catch (error) {
-         res.send({'error':'Internal error'}).status(500);
-        }
+         if(!results){
+            return res.status(400).send("Couldn't find that user");
+          }else{
+            return res.status(200).send(results);
+          }
+      
+         }catch (error) {
+          return res.status(500).send("Server Error");
+         }
        });
       
 export default router;
