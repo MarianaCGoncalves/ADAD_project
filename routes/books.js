@@ -7,9 +7,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   const page = parseInt(req.query.page) || 1
   const limit = parseInt(req.query.limit) || 10
- 
-
-  try {
+    try {
     const books = (await db.collection('books').find().skip((page-1)*limit).limit(limit).toArray());
     res.status(200).json({ page, limit, totalBooks, books });
   } catch (error) {
