@@ -175,48 +175,29 @@ router.get('/comments', async (req, res) => {
 
 
 //14(Alex)- Endpoint para listar livros avaliados num ano específico
-router.get('/year/:year', async (req, res) => { // Alterado para `/year/:year`
+router.get('/year/:year', async (req, res) => {
   const year = parseInt(req.params.year); // Converte o ano para um número inteiro
 
   try {
-      // Realiza a agregação para contar e ordenar os livros com comentários
-      let results = await db.collection('books').aggregate([
-          {
-              $lookup: {
-                  from: "comments",             // Associa com a coleção de comentários
-                  localField: "_id",            // Campo em livros (assumindo que é o campo `_id`)
-                  foreignField: "book_id",      // Campo em comentários que associa com livros
-                  as: "book_comments"           // Nome do campo onde os comentários serão armazenados
-              }
-          },
-          {
-              $match: { "book_comments.0": { $exists: true } } // Inclui apenas livros que têm pelo menos um comentário
-          },
-          {
-              $addFields: {
-                  totalComments: { $size: "$book_comments" } // Adiciona um campo `totalComments` com a contagem de comentários
-              }
-          },
-          {
-              $sort: { totalComments: -1 } // Ordena pelo número de comentários em ordem decrescente
-          },
-          {
-              $project: {
-                  title: 1,
-                  totalComments: 1,
-                  book_comments: 1 // Inclui os comentários no resultado
-              }
-          }
-      ]).toArray();
+      // Define o intervalo de datas para o ano especificado
+      const startDate = new Date(`${year}-01-01T00:00:00Z`);
+      const endDate = new Date(`${year + 1}-01-01T00:00:00Z`);
 
-      // Verifica se há resultados
+      // Consulta para obter livros publicados dentro do intervalo de datas do ano especificado
+      let results = await db.collection('books').find({
+          publishedDate: {
+              $gte: startDate,
+              $lt: endDate
+          }
+      }).toArray();
+
       if (results.length === 0) {
-          return res.status(404).send("Nenhum livro com comentários encontrado.");
+          return res.status(404).send("Nenhum livro encontrado para o ano especificado.");
       }
 
       res.status(200).json(results);
   } catch (error) {
-      console.error("Erro ao buscar livros com comentários:", error);
+      console.error("Erro ao buscar livros por ano:", error);
       res.status(500).send("Erro no servidor.");
   }
 });

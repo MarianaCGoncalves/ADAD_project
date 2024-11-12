@@ -2,79 +2,93 @@ import express from "express";
 import db from "../db/config.js";
 const router = express.Router();
 
-/*router.get('/test', (req, res) => {
-    res.send('Rota de teste funcionando!');
-});*/
-/*
-//1 Endpoint para adicionar um livro específico a uma livraria
-router.post('/:livrariaId/addBook/:bookId', async (req, res) => {
+router.get('/test', async (req, res) => {
     try {
-        const { livrariaId, bookId } = req.params;
+        const livrarias = await db.collection('livrarias').find().limit(1).toArray();
+        res.status(200).json(livrarias);
+    } catch (error) {
+        console.error("Erro ao conectar-se à base de dados:", error);
+        res.status(500).send("Erro no servidor.");
+    }
+});
 
-        // Verificar se o ID da livraria e do livro são válidos
-        if (!ObjectId.isValid(livrariaId) || !ObjectId.isValid(bookId)) {
-            return res.status(400).json({ error: "ID da livraria ou ID do livro inválido" });
+// Endpoint para adicionar um livro específico ao array `books` de uma livraria
+router.post('/:id', async (req, res) => {
+    const bookIds = Array.isArray(req.body) ? req.body : [req.body]; // Verifica se é um array ou um único ID
+
+    try {
+        const books = await db.collection("books").find({ 
+            _id: { $in: bookIds } // Passa diretamente os IDs
+        }).toArray();
+
+        if (books.length === 0) {
+            return res.status(404).json({ message: "Nenhum livro encontrado" });
         }
 
-        // Procurar a livraria pelo ID
-        const livraria = await db.collection("livrarias").findOne({ _id: new ObjectId(livrariaId) });
-        if (!livraria) {
-            return res.status(404).json({ error: "Livraria não encontrada" });
-        }
-
-        // Verificar se o livro existe na coleção 'books'
-        const livro = await db.collection("books").findOne({ _id: new ObjectId(bookId) });
-        if (!livro) {
-            return res.status(404).json({ error: "Livro não encontrado" });
-        }
-
-        // Adicionar o livro à livraria, mantendo os existentes
-        const updatedBooks = livraria.books ? livraria.books.concat([bookId]) : [bookId];
-        await db.collection("livrarias").updateOne(
-            { _id: new ObjectId(livrariaId) },
-            { $set: { books: updatedBooks } }
+        // Adiciona os livros completos à livraria
+        const result = await db.collection("livrarias").updateOne(
+            { _id: parseInt(req.params.id) },  // Encontra a livraria pelo ID
+            { $push: { books: { $each: books } } }  // Adiciona os livros completos
         );
 
-        // Responder com a livraria atualizada
-        const updatedLivraria = await db.collection("livrarias").findOne({ _id: new ObjectId(livrariaId) });
-        res.status(200).json({ message: "Livro adicionado à livraria com sucesso", livraria: updatedLivraria });
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ message: "Livraria não encontrada" });
+        }
+
+        res.status(201).json({ message: "Livros adicionados à livraria com sucesso" });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Erro ao adicionar o livro à livraria" });
+        res.status(500).json({ message: "Erro ao adicionar livros", error: error.message });
     }
 });
-//2 Endpoint para consultar livros numa livraria específica
-router.get('/:livrariaId/books', async (req, res) => {
+
+
+
+// 2. Consultar livros numa livraria específica
+router.get('/:id', async (req, res) => {
+
     try {
-        const { livrariaId } = req.params;
+      const livraria = await db.collection("livrarias").findOne(
+        { _id: parseInt(req.params.id) },
+        { projection: { books: 1 } }
+      );
+  
+      if (!livraria) {
+        return res.status(404).json({ message: "Livraria não encontrada" });
+      }
+  
+      res.status(200).json(livraria.books);
+    } catch (error) {
+      res.status(500).json({ message: "Erro ao consultar livros", error: error.message });
+    }
+  });
 
 
-        if (!ObjectId.isValid(livrariaId)) {
-            return res.status(400).json({ error: "ID da livraria inválido" });
+//2 Endpoint para consultar livros numa livraria específica
+router.get('/livrarias/:livrariaId', async (req, res) => {
+    const livrariaId = parseInt(req.params.livrariaId); // Converte o ID da livraria para um número
+
+    try {
+        // Busca a livraria e projeta apenas o array `books`
+        const livraria = await db.collection('livrarias').findOne(
+            { _id: livrariaId },
+            { projection: { books: 1, _id: 0 } } // Projeta apenas `books` e omite `_id`
+        );
+
+        // Se a livraria ou o array `books` não existir, responde com uma mensagem padrão
+        if (!livraria || !livraria.books) {
+            return res.status(404).send("Nenhum livro encontrado na livraria.");
         }
 
-        const livraria = await db.collection("livrarias").findOne({ _id: new ObjectId(livrariaId) });
-        if (!livraria) {
-            return res.status(404).json({ error: "Livraria não encontrada" });
-        }
-
-       
-        if (!livraria.books || livraria.books.length === 0) {
-            return res.status(404).json({ message: "Nenhum livro encontrado nesta livraria." });
-        }
-
-       
-        const livros = await db.collection("books").find({ _id: { $in: livraria.books.map(id => new ObjectId(id)) } }).toArray();
-
-        res.status(200).json({ livraria: livraria.INF_NOME, livros });
+        // Retorna apenas o array `books`
+        res.status(200).json(livraria.books);
     } catch (error) {
         console.error("Erro ao buscar livros na livraria:", error);
-        res.status(500).json({ error: "Erro no servidor." });
+        res.status(500).send("Erro no servidor.");
     }
 });
 
 
-
+/*
 //3 Endpoint para listar livrarias perto de uma localização
 router.get('/nearby', async (req, res) => {
     try {
