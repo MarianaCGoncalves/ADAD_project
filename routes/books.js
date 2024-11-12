@@ -2,6 +2,7 @@ import express from "express";
 import db from "../db/config.js";
 const router = express.Router();
 
+<<<<<<< Updated upstream
 //1-(Ricardo) Endpoint para listar livros com paginação 
 
 router.get('/', async (req, res) => {
@@ -17,6 +18,25 @@ router.get('/', async (req, res) => {
 
 
 
+=======
+// Endpoint para listar livros com paginação
+ 
+
+
+  router.get('/', async (req, res) => {
+    const page = parseInt(req.query.page) || 1; 
+    const limit = parseInt(req.query.limit) || 10;
+      try {
+      const books = (await db.collection('books').find().skip((page-1)*limit).limit(limit).toArray());
+      res.status(200).json({ page, limit,books });
+    } catch (error) {
+      res.status(500).json({ message: "Erro" });
+    }
+  });
+  
+
+ 
+>>>>>>> Stashed changes
 // 15-(Alex) Endpoint para listar livros com comentários, ordenados pelo número de comentários
 router.get('/comments', async (req, res) => {
     try {
