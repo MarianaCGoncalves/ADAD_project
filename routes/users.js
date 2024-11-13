@@ -3,6 +3,7 @@ import db from "../db/config.js";
 import { ObjectId } from "mongodb";
 const router = express.Router();
 
+<<<<<<< HEAD
 //EXEMPLO DE PAGINAÇÃO
 //endpoint 2 
 router.get("/page/:page", async (req, res) => { 
@@ -12,6 +13,23 @@ router.get("/page/:page", async (req, res) => {
     .toArray();
     res.send(results).status(200);
 });
+=======
+
+
+// Endpoint 2 -(Ricardo) Listar users com paginação 
+
+router.get('/', async (req, res) => {
+   const page = parseInt(req.query.page) || 1; 
+   const max = parseInt(req.query.max) || 20;
+    try {
+     const users = (await db.collection('users').find().sort({ _id: 1 }).skip((page - 1) * max).limit(max).toArray());
+     res.status(200).json({ page, max, users });
+   } catch (error) {
+     res.status(500).json({ message: "Erro" });
+   }
+ });
+
+>>>>>>> a577dcb61bccb43d66eb6eb32dab56659ed4130a
 
 
 //endpoint 6
