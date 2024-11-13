@@ -12,23 +12,21 @@ const router = express.Router();
     res.send(results).status(200);
 });
 */
-//Endpoint 2 (Ricardo) Listar Users com paginação
+
+// Endpoint 2 -(Ricardo) Listar users com paginação 
 
 router.get('/', async (req, res) => {
    const page = parseInt(req.query.page) || 1; 
    const max = parseInt(req.query.max) || 20;
-
-try{
-   const users = (await db.collection('users').find().sort({_id:1}).skip((page-1)*max).limit(max).toArray());
-   res.status(200).json({ page,max,users });}
-        
-catch (error) {
-   res.status(500).json({ message: "Erro" });
- }
-
+    try {
+     const users = (await db.collection('users').find().sort({ _id: 1 }).skip((page - 1) * max).limit(max).toArray());
+     res.status(200).json({ page, max, users });
+   } catch (error) {
+     res.status(500).json({ message: "Erro" });
+   }
+ });
 
 
-});
 //endpoint 6
 router.get("/:id", async (req, res) => {
     try{
@@ -52,14 +50,15 @@ router.get("/:id", async (req, res) => {
         
      ])
     .toArray();
-    if (!results || results.length == 0) { 
-        res.status(404).send("User not found");
-     } 
-        res.status(200).send(results); 
+    if(!results){
+      return res.status(400).send("Couldn't find that user");
+    }else{
+      return res.status(200).send(results);
+    }
 
-     }catch (error) {
-        res.send({'error':'Internal error'}).status(500);
-     }
+   }catch (error) {
+    return res.status(500).send("Server Error");
+   }
     }); 
 
 
@@ -70,14 +69,15 @@ router.get("/:id", async (req, res) => {
 
         let results = await db.collection('users').deleteOne({_id: id});
 
-        if (!results || results.length == 0) { 
-          res.status(404).send("User not found");
-       }  
-          res.status(200).send(results); 
-
-       }catch (error){
-        res.send({'error':'Internal error'}).status(500);
+        if(!results){
+         return res.status(400).send("Couldn't find that user");
+       }else{
+         return res.status(200).send(results);
        }
+   
+      }catch (error) {
+       return res.status(500).send("Server Error");
+      }
       });
 
 
@@ -100,13 +100,15 @@ router.get("/:id", async (req, res) => {
                reviews    
               }}
          );
-         if (!results || results.length == 0) { 
-           res.status(404).send("Book not found");
-        }  
-           res.status(200).send(results); 
-        }catch (error) {
-         res.send({'error':'Internal error'}).status(500);
-        }
+         if(!results){
+            return res.status(400).send("Couldn't find that user");
+          }else{
+            return res.status(200).send(results);
+          }
+      
+         }catch (error) {
+          return res.status(500).send("Server Error");
+         }
        });
       
 export default router;

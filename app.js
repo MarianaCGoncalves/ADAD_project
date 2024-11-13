@@ -21,3 +21,4 @@ console.log("Rota livrarias carregada");  // Adiciona esta linha para verificar 
 app.listen(port, () => {
   console.log(`Backend listening on port ${port}`);
 });
+

@@ -2,20 +2,17 @@ import express from "express";
 import db from "../db/config.js";
 const router = express.Router();
 
-//1-(Ricardo) Endpoint para listar livros com paginação 
-
+// 1 - (Ricardo ) Endpoint para listar livros com paginação
 router.get('/', async (req, res) => {
-  const page = parseInt(req.query.page) || 1
-  const max = parseInt(req.query.max) || 10
-    try {
-    const books = (await db.collection('books').find().sort({_id:1}).skip((page-1)*max).limit(max).toArray());
+  const page = parseInt(req.query.page) || 1; 
+  const max = parseInt(req.query.max) || 20;
+   try {
+    const books = (await db.collection('books').find().sort({ _id: 1 }).skip((page - 1) * max).limit(max).toArray());
     res.status(200).json({ page, max, books });
   } catch (error) {
     res.status(500).json({ message: "Erro" });
   }
 });
-
-
 
 // 15-(Alex) Endpoint para listar livros com comentários, ordenados pelo número de comentários
 router.get('/comments', async (req, res) => {
@@ -101,16 +98,15 @@ router.get('/comments', async (req, res) => {
   
     ]).toArray();
 
-    if (!results || results.length == 0) {  //ver se id existe
-      res.status(404).send("Book not found");
-   } 
-      res.status(200).send(results); 
+    if(!results){
+      return res.status(400).send("Couldn't find that book");
+    }else{
+      return res.status(200).send(results);
+    }
 
-  } catch (error){
-    
-      res.send({'error':'Internal error'}).status(500);
-   
-  }
+   }catch (error) {
+    return res.status(500).send("Server Error");
+   }
   });
 
 
@@ -119,13 +115,14 @@ router.get('/comments', async (req, res) => {
     try {
     const id = parseInt(req.params.id);
     let results = await db.collection('books').deleteOne({_id: id});
-    if (!results || results.length == 0) { 
-      res.status(404).send("Book not found");
+    if(!results){
+      return res.status(400).send("Couldn't find that book");
+    }else{
+      return res.status(200).send(results);
     }
-      res.status(200).send(results); 
 
    }catch (error) {
-    res.send({'error':'Internal error'}).status(500);
+    return res.status(500).send("Server Error");
    }
   });
 
@@ -159,12 +156,14 @@ router.get('/comments', async (req, res) => {
                 categories     
          }}
     );
-    if (!results || results.length == 0) { 
-      res.status(404).send("Book not found");
-   }  
-      res.status(200).send(results); 
+    if(!results){
+      return res.status(400).send("Couldn't find that book");
+    }else{
+      return res.status(200).send(results);
+    }
+
    }catch (error) {
-    res.send({'error':'Internal error'}).status(500);
+    return res.status(500).send("Server Error");
    }
   });
 
