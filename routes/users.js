@@ -14,10 +14,27 @@ router.get("/page/:page", async (req, res) => {
     res.send(results).status(200);
 });
 
-//endpoint 6
+
+// Endpoint 2 -(Ricardo) Listar users com paginação 
+
+router.get('/', async (req, res) => {
+   const page = parseInt(req.query.page) || 1; 
+   const max = parseInt(req.query.max) || 20;
+    try {
+     const users = (await db.collection('users').find().sort({ _id: 1 }).skip((page - 1) * max).limit(max).toArray());
+     res.status(200).json({ page, max, users });
+   } catch (error) {
+     res.status(500).json({ message: "Erro" });
+   }
+ });
+
+
+
+//endpoint 6 (Maria)
 router.get("/:id", async (req, res) => {
     try{
     const id = parseInt(req.params.id);
+    verifyId(id);
     let results = await db.collection('users').aggregate([
         {$match: {_id: id}},
 
@@ -49,10 +66,11 @@ router.get("/:id", async (req, res) => {
     }); 
 
 
-    //endpoint 8
+    //endpoint 8 (Maria)
     router.delete('/:id', async (req, res) => {
     try {
         const id = parseInt(req.params.id);
+        verifyId(id);
         let results = await db.collection('users').deleteOne({_id: id});
 
         if(!results){
@@ -67,10 +85,11 @@ router.get("/:id", async (req, res) => {
       });
 
 
-      //endpoint 10
+      //endpoint 10 (Maria)
       router.put('/:id', async (req, res) => {
          try {
          const id = parseInt(req.params.id);
+         verifyId(id);
          const {first_name,
              last_name,
              year_of_birth,

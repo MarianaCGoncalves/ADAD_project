@@ -62,7 +62,7 @@ router.get('/comments', async (req, res) => {
     }
 });
 
-  //endpoint 5
+  //endpoint 5 (Maria)
   router.get('/:id', async (req, res) => {
     const id = req.params.id;
     verifyId(id);
@@ -113,7 +113,7 @@ router.get('/comments', async (req, res) => {
   });
 
 
-  //endpoint 7
+  //endpoint 7 (Maria)
   router.delete('/:id', async (req, res) => {
     try {
     const id = parseInt(req.params.id);
@@ -131,10 +131,11 @@ router.get('/comments', async (req, res) => {
   });
 
 
-  //endpoint 9
+  //endpoint 9 (Maria)
   router.put('/:id', async (req, res) => {
     try {
     const id = parseInt(req.params.id);
+    verifyId(id);
     const {title,
         isbn,
         pageCount,
