@@ -2,26 +2,20 @@ import express from "express";
 import db from "../db/config.js";
 const router = express.Router();
 
-// Endpoint para listar livros com paginação
-// ALTERAR: db.collection.find().skip(10).limit(10);
-//exemplo: /users 
 
-router.get('/', (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
-  
-    const paginatedBooks = books.slice(startIndex, endIndex);
-    
-    res.status(200).json({
-      page,
-      limit,
-      totalBooks: books.length,
-      totalPages: Math.ceil(books.length / limit),
-      books: paginatedBooks
-    });
-  });
+// 1 - (Ricardo ) Endpoint para listar livros com paginação
+router.get('/', async (req, res) => {
+  const page = parseInt(req.query.page) || 1; 
+  const max = parseInt(req.query.max) || 20;
+   try {
+    const books = (await db.collection('books').find().sort({ _id: 1 }).skip((page - 1) * max).limit(max).toArray());
+    res.status(200).json({ page, max, books });
+  } catch (error) {
+    res.status(500).json({ message: "Erro" });
+  }
+});
+
+
 // 15-(Alex) Endpoint para listar livros com comentários, ordenados pelo número de comentários
 router.get('/comments', async (req, res) => {
     try {
