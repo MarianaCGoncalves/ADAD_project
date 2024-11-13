@@ -8,7 +8,7 @@ router.get('/', async (req, res) => {
   const page = parseInt(req.query.page) || 1
   const max = parseInt(req.query.max) || 10
     try {
-    const books = (await db.collection('books').find().skip((page-1)*max).limit(max).toArray());
+    const books = (await db.collection('books').find().sort({_id:1}).skip((page-1)*max).limit(max).toArray());
     res.status(200).json({ page, max, books });
   } catch (error) {
     res.status(500).json({ message: "Erro" });

@@ -16,11 +16,11 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
    const page = parseInt(req.query.page) || 1; 
-   const limit = parseInt(req.query.limit) || 10;
+   const max = parseInt(req.query.max) || 20;
 
 try{
-   const users = (await db.collection('users').find().skip((page-1)*limit).limit(limit).toArray());
-   res.status(200).json({ page, limit,users });}
+   const users = (await db.collection('users').find().sort({_id:1}).skip((page-1)*max).limit(max).toArray());
+   res.status(200).json({ page,max,users });}
         
 catch (error) {
    res.status(500).json({ message: "Erro" });
