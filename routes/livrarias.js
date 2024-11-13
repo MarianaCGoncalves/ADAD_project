@@ -65,7 +65,7 @@ router.get('/id/:id', async (req, res) => { //acrecentei o /id senao os endpoint
   });
 
 
-// #3 Endpoint para listar livrarias perto de uma localização
+// #3 Endpoint para listar livrarias perto de uma localização (Maria)
 router.get('/nearLocation', async (req, res) => {
     try {
         const { latitude, longitude, distancia } = req.query;
@@ -98,7 +98,7 @@ router.get('/nearLocation', async (req, res) => {
 
 
 
-// #5 Retornar número de livrarias perto de uma localização
+// #5 Retornar número de livrarias perto de uma localização (Maria)
 router.get('/quantasPerto', async (req, res) => {
     try {
         const { latitude, longitude, distancia } = req.query;

@@ -20,10 +20,11 @@ router.get('/', async (req, res) => {
 
 
 
-//endpoint 6
+//endpoint 6 (Maria)
 router.get("/:id", async (req, res) => {
     try{
     const id = parseInt(req.params.id);
+    verifyId(id);
     let results = await db.collection('users').aggregate([
         {$match: {_id: id}},
 
@@ -55,11 +56,11 @@ router.get("/:id", async (req, res) => {
     }); 
 
 
-    //endpoint 8
+    //endpoint 8 (Maria)
     router.delete('/:id', async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-
+        verifyId(id);
         let results = await db.collection('users').deleteOne({_id: id});
 
         if(!results){
@@ -74,10 +75,11 @@ router.get("/:id", async (req, res) => {
       });
 
 
-      //endpoint 10
+      //endpoint 10 (Maria)
       router.put('/:id', async (req, res) => {
          try {
          const id = parseInt(req.params.id);
+         verifyId(id);
          const {first_name,
              last_name,
              year_of_birth,

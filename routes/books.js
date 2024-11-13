@@ -61,7 +61,7 @@ router.get('/comments', async (req, res) => {
     }
 });
 
-  //endpoint 5
+  //endpoint 5 (Maria)
   router.get('/:id', async (req, res) => {
     const id = parseInt(req.params.id);
 
@@ -112,10 +112,11 @@ router.get('/comments', async (req, res) => {
   });
 
 
-  //endpoint 7
+  //endpoint 7 (Maria)
   router.delete('/:id', async (req, res) => {
     try {
     const id = parseInt(req.params.id);
+    verifyId(id);
     let results = await db.collection('books').deleteOne({_id: id});
     if(!results){
       return res.status(400).send("Couldn't find that book");
@@ -129,10 +130,11 @@ router.get('/comments', async (req, res) => {
   });
 
 
-  //endpoint 9
+  //endpoint 9 (Maria)
   router.put('/:id', async (req, res) => {
     try {
     const id = parseInt(req.params.id);
+    verifyId(id);
     const {title,
         isbn,
         pageCount,
