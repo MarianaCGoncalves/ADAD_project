@@ -2,6 +2,7 @@ import express from "express";
 import db from "../db/config.js";
 const router = express.Router();
 
+
 // 1 - (Ricardo ) Endpoint para listar livros com paginação
 router.get('/', async (req, res) => {
   const page = parseInt(req.query.page) || 1; 
@@ -13,6 +14,7 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: "Erro" });
   }
 });
+
 
 // 15-(Alex) Endpoint para listar livros com comentários, ordenados pelo número de comentários
 router.get('/comments', async (req, res) => {
