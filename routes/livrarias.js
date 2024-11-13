@@ -45,7 +45,7 @@ router.post('/:id', async (req, res) => {
 
 
 // #2 Endpoint para consultar livros numa livraria específica
-router.get('/:id', async (req, res) => {
+router.get('/id/:id', async (req, res) => { //acrecentei o /id senao os endpoints seguintes não funcionam
 
 
     try {
