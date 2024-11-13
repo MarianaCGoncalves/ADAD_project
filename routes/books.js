@@ -1,5 +1,6 @@
 import express from "express";
 import db from "../db/config.js";
+import { verifyId } from "./comments.js";
 const router = express.Router();
 
 
@@ -63,8 +64,8 @@ router.get('/comments', async (req, res) => {
 
   //endpoint 5
   router.get('/:id', async (req, res) => {
-    const id = parseInt(req.params.id);
-
+    const id = req.params.id;
+    verifyId(id);
     try {
     let results = await db.collection('users').aggregate([
       {$unwind: "$reviews"},
@@ -116,6 +117,7 @@ router.get('/comments', async (req, res) => {
   router.delete('/:id', async (req, res) => {
     try {
     const id = parseInt(req.params.id);
+    verifyId(id);
     let results = await db.collection('books').deleteOne({_id: id});
     if(!results){
       return res.status(400).send("Couldn't find that book");
