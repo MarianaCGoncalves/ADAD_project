@@ -16,6 +16,23 @@ router.get('/', async (req, res) => {
   }
 });
 
+//(Ricardo) endpoint 3 - inserir um ou mais books
+
+router.post('/', async (req, res) => {
+  const livroDado = Array.isArray(req.body) ? req.body : [req.body]; // Converte para array, caso não seja
+
+  try {
+    const insertionResult = await db.collection('books').insertMany(livroDado);
+    res.status(201).json({ 
+      message: 'Livros adicionados com sucesso', 
+      totalInserted: insertionResult.insertedCount 
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao adicionar livros', details: error.message });
+  }
+});
+
+
 
 // 15-(Alex) Endpoint para listar livros com comentários, ordenados pelo número de comentários
 router.get('/comments', async (req, res) => {

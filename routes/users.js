@@ -3,16 +3,7 @@ import db from "../db/config.js";
 import { ObjectId } from "mongodb";
 const router = express.Router();
 
-//EXEMPLO DE PAGINAÇÃO
-//endpoint 2 
 
-router.get("/page/:page", async (req, res) => { 
-    let page = parseInt(req.params.page) * 10;
-    let results = await db.collection('users').find({})
-    .limit(10).skip(page)
-    .toArray();
-    res.send(results).status(200);
-});
 
 
 // Endpoint 2 -(Ricardo) Listar users com paginação 
@@ -27,6 +18,22 @@ router.get('/', async (req, res) => {
      res.status(500).json({ message: "Erro" });
    }
  });
+
+ //Endpoint 4 - (Ricardo) Inserir um ou mais users 
+
+ router.post('/', async (req, res) => {
+  const userDado = Array.isArray(req.body) ? req.body : [req.body]; // Converte para array, caso não seja
+
+  try {
+    const insertionResult = await db.collection('users').insertMany(userDado);
+    res.status(201).json({ 
+      message: 'Users adicionados com sucesso', 
+      totalInserted: insertionResult.insertedCount 
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao adicionar Users', details: error.message });
+  }
+});
 
 
 
