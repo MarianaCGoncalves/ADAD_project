@@ -96,6 +96,40 @@ router.get('/nearLocation', async (req, res) => {
     }
 });
 
+//#4 Lista de livrarias perto do caminho de uma rota (Maria e Mariana)
+router.get('/pertoRota', async (req, res) => {
+    try {
+        const coordenadas = JSON.parse(req.query.coordenadas);
+
+
+        await db.collection("livrarias").createIndex({ location: "2dsphere"});
+
+        console.log(coordenadas); 
+
+        let results = await db.collection("livrarias").find(
+            {
+                "geometry.coordinates": {
+                    $geoIntersects: {
+                        $geometry: {
+                            type: 'LineString',
+                            coordinates: coordenadas
+                        }
+                    }
+                }
+            }
+        ).toArray();
+
+
+        if(results === 0){
+            return res.status(400).send("Não existem livrarias perto da rota");
+          }else{
+            return res.status(200).send(results);
+          }
+    } catch (error) {
+        return res.status(500).send("Server Error");
+    }
+});
+
 
 
 // #5 Retornar número de livrarias perto de uma localização (Maria)
