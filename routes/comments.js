@@ -3,12 +3,21 @@ import db from "../db/config.js";
 import { ObjectId } from "mongodb";
 const router = express.Router();
 
-//endpoint 19
+export function verifyId(id) {
+    let _id;
+    if(ObjectId.isValid(id)){
+        _id = new ObjectId(id);
+    }else if(!isNaN(id)){
+        _id = parseInt(id);
+    }
+    return _id;
+}
+//endpoint 19 (mariana)
 router.delete("/:id", async (req, res) => {
-    const id = parseInt(req.params.id);
     try{
+        const id = req.params.id;
+        verifyId(id);
         let results = await db.collection('comments').deleteOne({_id: id});
-        res.send(results).status(200);
 
         if(!results){
             res.status(400).send("No comment found");
@@ -20,7 +29,7 @@ router.delete("/:id", async (req, res) => {
     }
     });
 
-//endpoint 18
+//endpoint 18 (mariana)
 router.post("/", async (req,res)=> {
     try{
         let newComment = req.body;

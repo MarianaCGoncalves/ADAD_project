@@ -45,7 +45,7 @@ router.post('/:id', async (req, res) => {
 
 
 // #2 Endpoint para consultar livros numa livraria específica
-router.get('/:id', async (req, res) => {
+router.get('/id/:id', async (req, res) => { //acrecentei o /id senao os endpoints seguintes não funcionam
 
 
     try {
@@ -65,7 +65,7 @@ router.get('/:id', async (req, res) => {
   });
 
 
-// #3 Endpoint para listar livrarias perto de uma localização
+// #3 Endpoint para listar livrarias perto de uma localização (Maria)
 router.get('/nearLocation', async (req, res) => {
     try {
         const { latitude, longitude, distancia } = req.query;
@@ -98,7 +98,7 @@ router.get('/nearLocation', async (req, res) => {
 
 
 
-// #5 Retornar número de livrarias perto de uma localização
+// #5 Retornar número de livrarias perto de uma localização (Maria)
 router.get('/quantasPerto', async (req, res) => {
     try {
         const { latitude, longitude, distancia } = req.query;

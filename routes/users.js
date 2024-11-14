@@ -3,6 +3,16 @@ import db from "../db/config.js";
 import { ObjectId } from "mongodb";
 const router = express.Router();
 
+//EXEMPLO DE PAGINAÇÃO
+//endpoint 2 
+
+router.get("/page/:page", async (req, res) => { 
+    let page = parseInt(req.params.page) * 10;
+    let results = await db.collection('users').find({})
+    .limit(10).skip(page)
+    .toArray();
+    res.send(results).status(200);
+});
 
 
 // Endpoint 2 -(Ricardo) Listar users com paginação 
@@ -20,10 +30,11 @@ router.get('/', async (req, res) => {
 
 
 
-//endpoint 6
+//endpoint 6 (Maria)
 router.get("/:id", async (req, res) => {
     try{
     const id = parseInt(req.params.id);
+    verifyId(id);
     let results = await db.collection('users').aggregate([
         {$match: {_id: id}},
 
@@ -55,11 +66,11 @@ router.get("/:id", async (req, res) => {
     }); 
 
 
-    //endpoint 8
+    //endpoint 8 (Maria)
     router.delete('/:id', async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-
+        verifyId(id);
         let results = await db.collection('users').deleteOne({_id: id});
 
         if(!results){
@@ -74,10 +85,11 @@ router.get("/:id", async (req, res) => {
       });
 
 
-      //endpoint 10
+      //endpoint 10 (Maria)
       router.put('/:id', async (req, res) => {
          try {
          const id = parseInt(req.params.id);
+         verifyId(id);
          const {first_name,
              last_name,
              year_of_birth,
