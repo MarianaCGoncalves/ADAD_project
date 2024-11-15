@@ -13,7 +13,7 @@ router.get('/test', async (req, res) => {
     }
 });
 
-// Endpoint para adicionar um livro específico ao array `books` de uma livraria
+// #1 Endpoint para adicionar um livro específico ao array `books` de uma livraria
 router.post('/:id', async (req, res) => {
     const bookIds = Array.isArray(req.body) ? req.body : [req.body]; // Verifica se é um array ou um único ID
 
@@ -156,7 +156,7 @@ router.get('/quantasPerto', async (req, res) => {
         console.log(results);
 
         if(results === 0){
-            return res.status(400).send("Não existem livrarias perto");
+            return res.status(404).send("Não existem livrarias perto");
           }else{
             return res.status(200).json({ quantidade: results });
           }
