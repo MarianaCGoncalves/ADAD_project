@@ -191,7 +191,7 @@ router.get('/comments', async (req, res) => {
 
 
 //14(Alex)- Endpoint para listar livros avaliados num ano específico
-router.get('/year/:year', async (req, res) => {
+/*router.get('/year/:year', async (req, res) => {
   const year = parseInt(req.params.year); // Converte o ano para um número inteiro
 
   try {
@@ -214,6 +214,46 @@ router.get('/year/:year', async (req, res) => {
       res.status(200).json(results);
   } catch (error) {
       console.error("Erro ao buscar livros por ano:", error);
+      res.status(500).send("Erro no servidor.");
+  }
+});*/
+router.get('/reviews/year/:year', async (req, res) => {
+  const year = parseInt(req.params.year);
+
+  try {
+      const startDate = new Date(`${year}-01-01T00:00:00Z`).getTime();
+      const endDate = new Date(`${year + 1}-01-01T00:00:00Z`).getTime();
+
+      // Modifica a consulta para converter `review_date` para `long`
+      let usersWithReviewsInYear = await db.collection('users').aggregate([
+          { $unwind: "$reviews" },
+          { $addFields: { "reviews.review_date_number": { $toLong: "$reviews.review_date" } } },
+          { $match: {
+              "reviews.review_date_number": { $gte: startDate, $lt: endDate }
+          }},
+          { $group: { _id: "$_id", reviews: { $push: "$reviews" } } }
+      ]).toArray();
+
+      if (usersWithReviewsInYear.length === 0) {
+          return res.status(404).send(`Nenhum utilizador fez avaliações no ano ${year}.`);
+      }
+
+      const bookIds = new Set();
+      usersWithReviewsInYear.forEach(user => {
+          user.reviews.forEach(review => {
+              if (review.review_date_number >= startDate && review.review_date_number < endDate) {
+                  bookIds.add(review.book_id);
+              }
+          });
+      });
+
+      let reviewedBooks = await db.collection('books').find({
+          _id: { $in: Array.from(bookIds) }
+      }).toArray();
+
+      res.status(200).json(reviewedBooks);
+  } catch (error) {
+      console.error("Erro ao buscar utilizadores e livros avaliados:", error);
       res.status(500).send("Erro no servidor.");
   }
 });
