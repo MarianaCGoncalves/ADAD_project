@@ -120,8 +120,8 @@ router.get('/pertoRota', async (req, res) => {
         ).toArray();
 
 
-        if(results === 0){
-            return res.status(400).send("Não existem livrarias perto da rota");
+        if(results == 0){
+            return res.status(404).send("Não existem livrarias perto da rota");
           }else{
             return res.status(200).send(results);
           }
@@ -155,7 +155,7 @@ router.get('/quantasPerto', async (req, res) => {
        
         console.log(results);
 
-        if(results === 0){
+        if(results == 0){
             return res.status(404).send("Não existem livrarias perto");
           }else{
             return res.status(200).json({ quantidade: results });
