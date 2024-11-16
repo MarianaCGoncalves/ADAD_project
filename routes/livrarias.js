@@ -15,9 +15,9 @@ router.get('/test', async (req, res) => {
 
 // #1 Endpoint para adicionar um livro específico ao array `books` de uma livraria
 router.post('/:id', async (req, res) => {
-    const bookIds = Array.isArray(req.body) ? req.body : [req.body]; // Verifica se é um array ou um único ID
-
     try {
+        const bookIds = Array.isArray(req.body) ? req.body : [req.body]; // Verifica se é um array ou um único ID
+        console.log(bookIds);
         const books = await db.collection("books").find({ 
             _id: { $in: bookIds } // Passa diretamente os IDs
         }).toArray();
@@ -122,8 +122,8 @@ router.get('/pertoRota', async (req, res) => {
         ).toArray();
 
 
-        if(results === 0){
-            return res.status(400).send("Não existem livrarias perto da rota");
+        if(results == 0){
+            return res.status(404).send("Não existem livrarias perto da rota");
           }else{
             return res.status(200).send(results);
           }
