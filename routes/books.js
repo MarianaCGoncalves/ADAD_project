@@ -280,5 +280,108 @@ router.get('/category/:category/price/:price/author/:author', async(req, res)=> 
       return res.status(500).send("Server Error");
   }
 });
+//endpoint 11
+router.get('/top/:limit', async(req, res)=> {
+  const limit = parseInt(req.params.limit);
+  try{
+    let results = await db.collection('users').aggregate([ 
+
+      {$unwind: "$reviews"},
+
+      {$lookup: {
+          from:"books",
+          localField:"reviews.book_id",
+          foreignField:"_id",
+          as:"book_info"
+      }},
+      {$group: {
+        _id: "$reviews.book_id",
+        avg_score: {$avg: "$reviews.score"},
+        info: {$first: "$book_info"}
+    }},
+      //{$unwind: "$book_info"},
+
+
+
+      {$sort: {"avg_score":-1}},
+      {$limit: limit}
+    ]).toArray();
+
+    if(!results){
+      return res.status(400).send("Couldn't find that job");
+    }else{
+      return res.status(200).send(results);
+    }
+}catch(error){
+  return res.status(500).send("Server Error");
+}
+});
+
+//endpoint 12
+router.get('/ratings/:order', async(req, res)=> {
+    try{
+      let order = req.params.order;
+      console.log(order);
+      if(order == "asc"){
+        order = 1;
+      }else{
+        order = -1;
+      }
+      console.log(order);
+
+      let results = await db.collection('users').aggregate([
+        {$unwind: "$reviews"},
+          {$lookup: {
+            from: "books",
+            localField: "reviews.book_id",
+            foreignField: "_id",
+            as: "book_info"
+          }},
+        {$group: {
+            _id: "$reviews.book_id",
+            book_title:{$first:"$book_info.title"},
+            number_reviews:{$count: {}}
+        }},
+        {$sort: {number_reviews: order}} 
+      ]).toArray();
+
+      if(!results){
+        res.status(404).send("Couldn't find the book");
+      }else{
+        res.status(200).send(results);
+      }
+  }catch(error){
+      return res.status(500).send("Server Error");
+  }
+});
+
+//endpoint 13
+router.get('/star', async(req, res)=> {
+  try{
+    let results = await db.collection('users').aggregate([
+      {$unwind: "$reviews"},
+        {$lookup: {
+            from: "books",
+            localField: "reviews.book_id",
+            foreignField: "_id",
+            as: "book_info"
+         }},
+        {$match: {"reviews.score" : 5}},
+          {$group: {
+            _id: "$reviews.book_id",
+            book_title: {$first: "$book_info.title"},
+            total_5_reviews:{$count: {}}
+          }}   
+    ]).toArray();
+    if(!results){
+      res.status(404).send("Couldn't find the books");
+    }else{
+      res.status(200).send(results);
+    }
+}catch(error){
+    return res.status(500).send("Server Error");
+}
+});
+
 export default router;
 
