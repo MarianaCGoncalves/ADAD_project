@@ -96,6 +96,8 @@ router.get('/nearLocation', async (req, res) => {
     }
 });
 
+
+
 //#4 Lista de livrarias perto do caminho de uma rota (Maria e Mariana)
 router.get('/pertoRota', async (req, res) => {
     try {
@@ -120,8 +122,8 @@ router.get('/pertoRota', async (req, res) => {
         ).toArray();
 
 
-        if(results == 0){
-            return res.status(404).send("Não existem livrarias perto da rota");
+        if(results === 0){
+            return res.status(400).send("Não existem livrarias perto da rota");
           }else{
             return res.status(200).send(results);
           }
@@ -147,7 +149,7 @@ router.get('/quantasPerto', async (req, res) => {
             {
                 "geometry.coordinates": {
                     $geoWithin: {
-                        $centerSphere: [[longitude2, latitude2], distancia2 / 3963.2] //para obter a disrancia em radianos é preciso dividir pelo nº de milhas da Terra
+                        $centerSphere: [[longitude2, latitude2], distancia2 / 3963.2] //para obter a distancia em radianos é preciso dividir pelo nº de milhas da Terra
                     }
                 }
             }
@@ -164,5 +166,39 @@ router.get('/quantasPerto', async (req, res) => {
         return res.status(500).send("Server Error");
     }
 });
- 
+
+//#6 Verificar se um determinado user (Ponto) se encontra dentro da feira
+//do livro. Coordenadas para testar: [-9.155644342145884,38.72749043040882] (Mariana)
+router.get('/testaPonto', async (req, res) => {
+    try {
+        const { latitude, longitude } = req.query;
+
+        const latitude2 = parseFloat(latitude);
+        const longitude2 = parseFloat(longitude);
+
+        await db.collection("livrarias").createIndex({ location: "2dsphere"});
+
+        let results = await db.collection("livrarias").find(
+            {
+                "geometry.coordinates": {
+                    $geoIntersects: {
+                        $geometry: {
+                            type: "Point",
+                            coordinates: [longitude2, latitude2]
+                        }
+                    }
+                }
+            }
+        );
+
+        if(results == 0){
+            return res.status(404).send("Não está na feira do livro");
+          }else{
+            return res.status(200).send("Está na feira do livro");
+          }
+    } catch (error) {
+        return res.status(500).send("Server Error");
+    }
+});
+
 export default router;

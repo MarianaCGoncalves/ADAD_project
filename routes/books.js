@@ -80,7 +80,7 @@ router.get('/comments', async (req, res) => {
 });
 
   //endpoint 5 (Maria)
-  router.get('/:id', async (req, res) => {
+  router.get('/id/:id', async (req, res) => {
     const id = parseInt(req.params.id);
     verifyId(id);
     try {
@@ -118,7 +118,7 @@ router.get('/comments', async (req, res) => {
   
     ]).toArray();
 
-    if(!results){
+    if(results == 0){
       return res.status(404).send("Couldn't find that book");
     }else{
       return res.status(200).send(results);
@@ -136,7 +136,7 @@ router.get('/comments', async (req, res) => {
     const id = parseInt(req.params.id);
     verifyId(id);
     let results = await db.collection('books').deleteOne({_id: id});
-    if(!results){
+    if(results == 0){
       return res.status(404).send("Couldn't find that book");
     }else{
       return res.status(200).send(results);
@@ -178,7 +178,7 @@ router.get('/comments', async (req, res) => {
                 categories     
          }}
     );
-    if(!results){
+    if(results == 0){
       return res.status(404).send("Couldn't find that book");
     }else{
       return res.status(200).send(results);
