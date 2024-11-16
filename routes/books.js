@@ -80,7 +80,7 @@ router.get('/comments', async (req, res) => {
 });
 
   //endpoint 5 (Maria)
-  router.get('/:id', async (req, res) => {
+  router.get('/id/:id', async (req, res) => {
     const id = parseInt(req.params.id);
     verifyId(id);
     try {
@@ -353,6 +353,34 @@ router.get('/ratings/:order', async(req, res)=> {
   }catch(error){
       return res.status(500).send("Server Error");
   }
+});
+
+//endpoint 13
+router.get('/star', async(req, res)=> {
+  try{
+    let results = await db.collection('users').aggregate([
+      {$unwind: "$reviews"},
+        {$lookup: {
+            from: "books",
+            localField: "reviews.book_id",
+            foreignField: "_id",
+            as: "book_info"
+         }},
+        {$match: {"reviews.score" : 5}},
+          {$group: {
+            _id: "$reviews.book_id",
+            book_title: {$first: "$book_info.title"},
+            total_5_reviews:{$count: {}}
+          }}   
+    ]).toArray();
+    if(!results){
+      res.status(404).send("Couldn't find the books");
+    }else{
+      res.status(200).send(results);
+    }
+}catch(error){
+    return res.status(500).send("Server Error");
+}
 });
 
 export default router;
