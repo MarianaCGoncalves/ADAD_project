@@ -17,10 +17,10 @@ router.get('/test', async (req, res) => {
 router.post('/:id', async (req, res) => {
     try {
         const bookIds = Array.isArray(req.body) ? req.body : [req.body]; // Verifica se é um array ou um único ID
-        console.log(bookIds);
         const books = await db.collection("books").find({ 
             _id: { $in: bookIds } // Passa diretamente os IDs
         }).toArray();
+        console.log(bookIds);
 
         if (books.length === 0) {
             return res.status(404).json({ message: "Nenhum livro encontrado" });
