@@ -1,6 +1,7 @@
 import express from "express";
 import db from "../db/config.js";
 import { ObjectId } from "mongodb";
+import { verifyId } from "./comments.js";
 const router = express.Router();
 
 
@@ -61,8 +62,8 @@ router.get("/:id", async (req, res) => {
         
      ])
     .toArray();
-    if(!results){
-      return res.status(400).send("Couldn't find that user");
+    if(results == 0){
+      return res.status(404).send("Couldn't find that user");
     }else{
       return res.status(200).send(results);
     }
@@ -80,8 +81,8 @@ router.get("/:id", async (req, res) => {
         verifyId(id);
         let results = await db.collection('users').deleteOne({_id: id});
 
-        if(!results){
-         return res.status(400).send("Couldn't find that user");
+        if(results == 0){
+         return res.status(404).send("Couldn't find that user");
        }else{
          return res.status(200).send(results);
        }
@@ -113,7 +114,7 @@ router.get("/:id", async (req, res) => {
               }}
          );
          if(!results){
-            return res.status(400).send("Couldn't find that user");
+            return res.status(404).send("Couldn't find that user");
           }else{
             return res.status(200).send(results);
           }
