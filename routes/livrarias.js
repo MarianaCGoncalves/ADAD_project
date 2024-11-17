@@ -169,7 +169,7 @@ router.get('/quantasPerto', async (req, res) => {
 
 //#6 Verificar se um determinado user (Ponto) se encontra dentro da feira
 //do livro. Coordenadas para testar: [-9.155644342145884,38.72749043040882] (Mariana)
-router.get('/testaPonto', async (req, res) => {
+router.get('/feiraLivro', async (req, res) => {
     try {
         const { latitude, longitude } = req.query;
 
