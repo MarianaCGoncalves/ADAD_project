@@ -8,17 +8,20 @@ export function verifyId(id) {
     if(ObjectId.isValid(id)){
         _id = new ObjectId(id);
     }else if(!isNaN(id)){
-        _id = parseInt(id);
+        _id = parseInt(id); 
     }
     return _id;
 }
+
 //endpoint 19 (mariana)
 router.delete("/:id", async (req, res) => {
     try{
         const id = req.params.id;
-        verifyId(id);
+        console.log(id);
+        //let results = await db.collection('comments').deleteOne({_id: Object(id)});
+        
         let results = await db.collection('comments').deleteOne({_id: id});
-
+    
         if(!results){
             res.status(400).send("No comment found");
         }else{
@@ -27,6 +30,8 @@ router.delete("/:id", async (req, res) => {
     }catch(error){
         res.send({"error":"Internal Error"}).status(500);
     }
+
+
     });
 
 //endpoint 18 (mariana)
