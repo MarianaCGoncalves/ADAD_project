@@ -14,33 +14,42 @@ router.get('/test', async (req, res) => {
 });
 
 // #1 Endpoint para adicionar um livro específico ao array `books` de uma livraria
+
+// Endpoint para adicionar livros ao array `books` de uma livraria
 router.post('/:id', async (req, res) => {
     try {
-        const bookIds = Array.isArray(req.body) ? req.body : [req.body]; // Verifica se é um array ou um único ID
-        const books = await db.collection("books").find({ 
-            _id: { $in: bookIds } // Passa diretamente os IDs
-        }).toArray();
-        console.log(bookIds);
+        // Garante que os IDs dos livros são processados como um array
+        const bookIds = Array.isArray(req.body) ? req.body : [req.body];
 
-        if (books.length === 0) {
-            return res.status(404).json({ message: "Nenhum livro encontrado" });
+        // Valida se existem livros correspondentes aos IDs fornecidos
+        const books = await db.collection("books").find({ 
+            _id: { $in: bookIds }
+        }).toArray();
+
+        if (!books.length) {
+            return res.status(404).send({ message: "Livros não encontrados" });
         }
 
-        // Adiciona os livros completos à livraria
-        const result = await db.collection("livrarias").updateOne(
-            { _id: parseInt(req.params.id) },  // Encontra a livraria pelo ID
-            { $push: { books: { $each: books } } }  // Adiciona os livros completos
+        // Atualiza a livraria adicionando apenas os livros encontrados
+        const updateResponse = await db.collection("livrarias").updateOne(
+            { _id: parseInt(req.params.id) },
+            { $push: { books: { $each: books } } }
         );
 
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ message: "Livraria não encontrada" });
+        if (!updateResponse.matchedCount) {
+            return res.status(404).send({ message: "Livraria não encontrada" });
         }
 
-        res.status(201).json({ message: "Livros adicionados à livraria com sucesso" });
-    } catch (error) {
-        res.status(500).json({ message: "Erro ao adicionar livros", error: error.message });
+        if (!updateResponse.modifiedCount) {
+            return res.status(400).send({ message: "Nenhuma modificação foi feita" });
+        }
+
+        res.status(201).send({ message: "Livros adicionados com sucesso à livraria" });
+    } catch (err) {
+        res.status(500).send({ message: "Erro ao adicionar livros", error: err.message });
     }
 });
+
 
 
 

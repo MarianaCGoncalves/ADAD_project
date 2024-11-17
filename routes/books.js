@@ -190,33 +190,72 @@ router.get('/comments', async (req, res) => {
   });
 
 
-//14(Alex)- Endpoint para listar livros avaliados num ano específico
+// Endpoint 14: Obter livros avaliados num ano específico
 router.get('/year/:year', async (req, res) => {
-  const year = parseInt(req.params.year); // Converte o ano para um número inteiro
-
   try {
-      // Define o intervalo de datas para o ano especificado
-      const startDate = new Date(`${year}-01-01T00:00:00Z`);
-      const endDate = new Date(`${year + 1}-01-01T00:00:00Z`);
+    const page = parseInt(req.query.page) || 1; // Página especificada na query ou 1 por padrão
+    const usersPerPage = 20;
+    const safePage = Math.max(page, 1); // Garantir que a página é positiva
 
-      // Consulta para obter livros publicados dentro do intervalo de datas do ano especificado
-      let results = await db.collection('books').find({
-          publishedDate: {
-              $gte: startDate,
-              $lt: endDate
+    // Criar timestamps para o início e o fim do ano especificado
+    const startOfYear = new Date(`${req.params.year}-01-01`).getTime().toString();
+    const startOfNextYear = new Date(`${parseInt(req.params.year) + 1}-01-01`).getTime().toString();
+
+    // Executar a agregação na coleção
+    const results = await db.collection("users").aggregate([
+      // Desestrutura o array de reviews
+      { $unwind: "$reviews" },
+      // Filtrar reviews que pertencem ao ano especificado
+      {
+        $match: {
+          "reviews.review_date": {
+            $gte: startOfYear,
+            $lt: startOfNextYear
           }
-      }).toArray();
-
-      if (results.length === 0) {
-          return res.status(404).send("Nenhum livro encontrado para o ano especificado.");
+        }
+      },
+      // Agrupar por `book_id` das reviews
+      {
+        $group: {
+          _id: "$reviews.book_id"
+        }
+      },
+      // Ordenar os resultados pelo `book_id`
+      {
+        $sort: {
+          _id: 1
+        }
+      },
+      // Associar informações adicionais dos livros com `$lookup`
+      {
+        $lookup: {
+          from: "books", // Nome da coleção de livros
+          localField: "_id", // Campo do agrupamento (book_id)
+          foreignField: "_id", // Campo correspondente na coleção `books`
+          as: "livro" // Nome do array resultante
+        }
+      },
+      // Projetar apenas os campos necessários
+      {
+        $project: {
+          "livro.title": 1,
+          "livro._id": 1,
+          _id: 0
+        }
       }
+    ])
+      .skip((safePage - 1) * usersPerPage) // Paginação: saltar resultados com base na página
+      .limit(usersPerPage) // Limitar os resultados por página
+      .toArray();
 
-      res.status(200).json(results);
+    // Enviar os resultados
+    res.status(200).send(results);
   } catch (error) {
-      console.error("Erro ao buscar livros por ano:", error);
-      res.status(500).send("Erro no servidor.");
+    // Enviar mensagem de erro em caso de falha
+    res.status(500).send({ message: "Erro de servidor", error: error.message });
   }
 });
+
 
 
 //endpoint 16
