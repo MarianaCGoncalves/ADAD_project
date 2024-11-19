@@ -80,7 +80,7 @@ router.get('/nearLocation', async (req, res) => {
             {
                 "geometry.coordinates": {
                     $geoWithin: {
-                        $centerSphere: [[longitude2, latitude2], distancia2 / 3963.2] //para obter a disrancia em radianos é preciso dividir pelo nº de milhas da Terra
+                        $centerSphere: [[longitude2, latitude2], distancia2 / 3963.2] //para obter a distancia em radianos é preciso dividir pelo nº de milhas da Terra
                     }
                 }
             }
