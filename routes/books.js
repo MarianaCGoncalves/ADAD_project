@@ -5,16 +5,45 @@ const router = express.Router();
 
 
 // 1 - (Ricardo ) Endpoint para listar livros com paginação
+
+
 router.get('/', async (req, res) => {
   const page = parseInt(req.query.page) || 1; 
   const max = parseInt(req.query.max) || 20;
-   try {
-    const books = (await db.collection('books').find().sort({ _id: 1 }).skip((page - 1) * max).limit(max).toArray());
-    res.status(200).json({ page, max, books });
+
+  try {
+   
+    const totalBooks = await db.collection('books').countDocuments();
+     const totalPages = Math.ceil(totalBooks / max);
+    if (page < 1 || page > totalPages) {
+      return res.status(400).json({
+        message: `Página inválida. Escolha uma página entre 1 e ${totalPages}.`,
+      });
+    }
+   const currentPage = Math.min(Math.max(page, 1), totalPages);
+   const lastPage = currentPage > 1 ? currentPage - 1 : null;
+   const nextPage = currentPage < totalPages ? currentPage + 1 : null;
+   
+   const books = await db.collection('books')
+      .find()
+      .sort({ _id: 1 })
+      .skip((currentPage - 1) * max)
+      .limit(max)
+      .toArray();
+      res.status(200).json({
+      pages: {
+        current: currentPage,
+        next: nextPage,
+        last: lastPage,
+        total: totalPages,
+      },
+      books,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Erro" });
+    res.status(500).json({ message: "Erro ao buscar livros", error: error.message });
   }
 });
+
 
 //(Ricardo) endpoint 3 - inserir um ou mais books
 

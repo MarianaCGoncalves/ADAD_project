@@ -9,15 +9,40 @@ const router = express.Router();
 // Endpoint 2 -(Ricardo) Listar users com paginação 
 
 router.get('/', async (req, res) => {
-   const page = parseInt(req.query.page) || 1; 
-   const max = parseInt(req.query.max) || 20;
-    try {
-     const users = (await db.collection('users').find().sort({ _id: 1 }).skip((page - 1) * max).limit(max).toArray());
-     res.status(200).json({ page, max, users });
-   } catch (error) {
-     res.status(500).json({ message: "Erro" });
-   }
- });
+  const page = parseInt(req.query.page) || 1; 
+  const max = parseInt(req.query.max) || 20;
+
+  try {
+    const totalUsers = await db.collection('users').countDocuments();
+    const totalPages = Math.ceil(totalUsers / max);
+
+    if (page < 1 || page > totalPages) {
+      return res.status(400).json({
+        message: `Página inválida. Escolha uma página entre 1 e ${totalPages}.`,
+      });
+    }
+
+    const users = await db.collection('users')
+      .find()
+      .sort({ _id: 1 })
+      .skip((page - 1) * max)
+      .limit(max)
+      .toArray();
+
+    res.status(200).json({
+      pages: {
+        current: page,
+        next: page < totalPages ? page + 1 : null,
+        last: page > 1 ? page - 1 : null,
+        total: totalPages,
+      },
+      users,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Erro", error: error.message });
+  }
+});
+
 
  //Endpoint 4 - (Ricardo) Inserir um ou mais users 
 
