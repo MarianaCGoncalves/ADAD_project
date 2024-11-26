@@ -10,14 +10,20 @@ const router = express.Router();
 // Endpoint 2 -(Ricardo) Listar users com paginação 
 
 router.get('/', async (req, res) => {
-  const page = parseInt(req.query.page) || 1; 
+  let page = parseInt(req.query.page);
   const max = parseInt(req.query.max) || 20;
+
+  if (page < 1) {
+    return res.status(400).json({
+      message: 'A página deve ser um número válido maior ou igual a 1.',
+    });
+  }
 
   try {
     const totalUsers = await db.collection('users').countDocuments();
     const totalPages = Math.ceil(totalUsers / max);
 
-    if (page < 1 || page > totalPages) {
+    if (page > totalPages) {
       return res.status(400).json({
         message: `Página inválida. Escolha uma página entre 1 e ${totalPages}.`,
       });
@@ -43,6 +49,8 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: "Erro", error: error.message });
   }
 });
+
+
 
 
  //Endpoint 4 - (Ricardo) Inserir um ou mais users 
