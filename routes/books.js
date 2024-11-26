@@ -8,7 +8,7 @@ const router = express.Router();
 
 
 router.get('/', async (req, res) => {
-  const page = parseInt(req.query.page) || 1; 
+  const page = parseInt(req.query.page);
   const max = parseInt(req.query.max) || 20;
 
   try {
