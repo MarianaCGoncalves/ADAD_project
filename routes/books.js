@@ -5,23 +5,52 @@ const router = express.Router();
 
 
 // 1 - (Ricardo ) Endpoint para listar livros com paginação
+
+
 router.get('/', async (req, res) => {
-  const page = parseInt(req.query.page) || 1; 
+  const page = parseInt(req.query.page);
   const max = parseInt(req.query.max) || 20;
-   try {
-    const books = (await db.collection('books').find().sort({ _id: 1 }).skip((page - 1) * max).limit(max).toArray());
-    res.status(200).json({ page, max, books });
+
+  try {
+   
+    const totalBooks = await db.collection('books').countDocuments();
+     const totalPages = Math.ceil(totalBooks / max);
+    if (page < 1 || page > totalPages) {
+      return res.status(400).json({
+        message: `Página inválida. Escolha uma página entre 1 e ${totalPages}.`,
+      });
+    }
+   const currentPage = Math.min(Math.max(page, 1), totalPages);
+   const lastPage = currentPage > 1 ? currentPage - 1 : null;
+   const nextPage = currentPage < totalPages ? currentPage + 1 : null;
+   
+   const books = await db.collection('books')
+      .find()
+      .sort({ _id: 1 })
+      .skip((currentPage - 1) * max)
+      .limit(max)
+      .toArray();
+      res.status(200).json({
+      pages: {
+        current: currentPage,
+        next: nextPage,
+        last: lastPage,
+        total: totalPages,
+      },
+      books,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Erro" });
+    res.status(500).json({ message: "Erro ao buscar livros", error: error.message });
   }
 });
+
 
 //(Ricardo) endpoint 3 - inserir um ou mais books
 
 router.post('/', async (req, res) => {
   const livroDado = Array.isArray(req.body) ? req.body : [req.body]; // Converte para array, caso não seja
 
-  try {
+  try{
     const insertionResult = await db.collection('books').insertMany(livroDado);
     res.status(201).json({ 
       message: 'Livros adicionados com sucesso', 
@@ -31,6 +60,7 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: 'Erro ao adicionar livros', details: error.message });
   }
 });
+
 
 
 
@@ -190,6 +220,66 @@ router.get('/comments', async (req, res) => {
   });
 
 
+// Endpoint 14: Obter livros avaliados num ano específico
+router.get('/year/:year', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1; // Página especificada na query ou 1 por padrão
+    const usersPerPage = 20;
+    const safePage = Math.max(page, 1); // Garantir que a página é positiva
+
+    // Criar timestamps para o início e o fim do ano especificado
+    const startOfYear = new Date(`${req.params.year}-01-01`).getTime().toString();
+    const startOfNextYear = new Date(`${parseInt(req.params.year) + 1}-01-01`).getTime().toString();
+
+    // Executar a agregação na coleção
+    const results = await db.collection("users").aggregate([
+      // Desestrutura o array de reviews
+      { $unwind: "$reviews" },
+      // Filtrar reviews que pertencem ao ano especificado
+      {
+        $match: {
+          "reviews.review_date": {
+            $gte: startOfYear,
+            $lt: startOfNextYear
+          }
+        }
+      },
+      // Agrupar por `book_id` das reviews
+      {
+        $group: {
+          _id: "$reviews.book_id"
+        }
+      },
+      // Ordenar os resultados pelo `book_id`
+      {
+        $sort: {
+          _id: 1
+        }
+      },
+      // Associar informações adicionais dos livros com `$lookup`
+      {
+        $lookup: {
+          from: "books", // Nome da coleção de livros
+          localField: "_id", // Campo do agrupamento (book_id)
+          foreignField: "_id", // Campo correspondente na coleção `books`
+          as: "livro" // Nome do array resultante
+        }
+      },
+      // Projetar apenas os campos necessários
+      {
+        $project: {
+          "livro.title": 1,
+          "livro._id": 1,
+          _id: 0
+        }
+      }
+    ])
+      .skip((safePage - 1) * usersPerPage) // Paginação: saltar resultados com base na página
+      .limit(usersPerPage) // Limitar os resultados por página
+      .toArray();
+
+    // Enviar os resultados
+    res.status(200).send(results);
 //14(Alex)- Endpoint para listar livros avaliados num ano específico
 /*router.get('/year/:year', async (req, res) => {
   const year = parseInt(req.params.year); // Converte o ano para um número inteiro
@@ -213,8 +303,8 @@ router.get('/comments', async (req, res) => {
 
       res.status(200).json(results);
   } catch (error) {
-      console.error("Erro ao buscar livros por ano:", error);
-      res.status(500).send("Erro no servidor.");
+    // Enviar mensagem de erro em caso de falha
+    res.status(500).send({ message: "Erro de servidor", error: error.message });
   }
 });*/
 router.get('/reviews/year/:year', async (req, res) => {
@@ -257,6 +347,7 @@ router.get('/reviews/year/:year', async (req, res) => {
       res.status(500).send("Erro no servidor.");
   }
 });
+
 
 
 //endpoint 16
