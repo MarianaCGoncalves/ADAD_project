@@ -455,8 +455,10 @@ router.get('/ratings/:order', async(req, res)=> {
       console.log(order);
       if(order == "asc"){
         order = 1;
-      }else{
+      }else if(order == "desc"){
         order = -1;
+      }else{
+        return res.status(404).send("Order not found");
       }
       console.log(order);
 

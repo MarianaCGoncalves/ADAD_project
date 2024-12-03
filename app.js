@@ -3,13 +3,13 @@ import books from "./routes/books.js";
 import users from "./routes/users.js";
 import comments from "./routes/comments.js";
 import livrarias from "./routes/livrarias.js";
-import cors from "cors"
+import cors from "cors";
 
 const app = express();
 const port = 3000;
 
 app.use(express.json());
-app.use(cors())
+app.use(cors());
 
 // Load the routes
 app.use("/books", books);
