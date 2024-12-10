@@ -73,38 +73,64 @@ router.get('/', async (req, res) => {
 
 //endpoint 6 (Maria)
 router.get("/:id", async (req, res) => {
-    try{
+  try {
     const id = parseInt(req.params.id);
     verifyId(id);
-    let results = await db.collection('users').aggregate([
-        {$match: {_id: id}},
 
-       
-        {$unwind: "$reviews"},
-        
-        {$sort: {"reviews.score": -1}},
-        {$limit: 3},
-        {$group: {
-            _id: "$_id",
-            first_name: {$first: "$first_name"},
-            last_name: {$first: "$last_name"},
-            year_of_birth: {$first: "$year_of_birth"},
-            job: {$first: "$job"},
-            reviews: {$push: "$reviews"}
-        }}
-        
-     ])
-    .toArray();
-    if(results == 0){
+    let results = await db.collection('users').aggregate([
+      { $match: { _id: id } }, // Filtra o utilizador pelo ID
+      { $unwind: "$reviews" }, // Divide as reviews para processamento
+      { $sort: { "reviews.score": -1 } }, // Ordena por score decrescente
+      { $limit: 3 }, // Limita a 3 avaliações
+      { $lookup: { // Junta os detalhes dos livros à coleção de reviews
+          from: "books",
+          localField: "reviews.book_id",
+          foreignField: "_id",
+          as: "book_details"
+      }},
+      { $unwind: "$book_details" }, // Torna os detalhes dos livros acessíveis
+      { $lookup: { // Junta os comentários apenas dos top 3 livros
+          from: "comments",
+          let: { bookId: "$reviews.book_id" }, // Variável para o ID do livro
+          pipeline: [
+            { $match: { $expr: { $eq: ["$book_id", "$$bookId"] } } }, // Verifica se há comentários para o livro
+            { $project: { _id: 1, user_id: 1, book_id: 1, comment: 1, date: 1 } } // Retorna apenas os campos necessários
+          ],
+          as: "book_comments" // Adiciona os comentários dos livros
+      }},
+      { $group: { // Agrupa os resultados para criar um objeto completo
+          _id: "$_id",
+          first_name: { $first: "$first_name" },
+          last_name: { $first: "$last_name" },
+          year_of_birth: { $first: "$year_of_birth" },
+          job: { $first: "$job" },
+          reviews: { $push: {
+              book_id: "$reviews.book_id",
+              score: "$reviews.score",
+              recommendation: "$reviews.recommendation",
+              review_date: "$reviews.review_date",
+              thumbnailUrl: "$book_details.thumbnailUrl",
+              title: "$book_details.title",
+              authors: "$book_details.authors",
+              categories: "$book_details.categories",
+              price: "$book_details.price",
+              pageCount: "$book_details.pageCount",
+              comments: "$book_comments" // Inclui os comentários associados ao livro
+          }}
+      }}
+    ]).toArray();
+
+    if (results.length === 0) {
       return res.status(404).send("Couldn't find that user");
-    }else{
+    } else {
       return res.status(200).send(results);
     }
-
-   }catch (error) {
+  } catch (error) {
     return res.status(500).send("Server Error");
-   }
-    }); 
+  }
+});
+
+
 
 
     //endpoint 8 (Maria)
